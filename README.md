@@ -134,6 +134,13 @@ It takes about 15 secs to import 500k lines (requests) on an MBP.
 
 You can now run `psql my_test_db` to query the log.
 
+```
+        time         | subdomain |  ip_address  | method |   path   | format |   controller    | action | status | duration | view |  db
+---------------------+-----------+--------------+--------+----------+--------+-----------------+--------+--------+----------+------+------
+ 2018-05-10 01:56:44 | www       | 117.75.19.61 | GET    | /users/1 | */*    | UsersController | show   | 200    |    12.54 | 7.63 | 2.63
+(1 row)
+```
+
 ### Count
 
 ```
