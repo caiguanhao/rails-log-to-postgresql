@@ -188,6 +188,39 @@ You can now run `psql my_test_db` to query the log.
 ...
 ```
 
+### Count by hour
+
+```
+# select date_part('hour', time), count(*) c from weblogs where path = '/' group by 1 order by c desc;
+ date_part |  c
+-----------+------
+         9 | 2321
+        11 | 2220
+        17 | 2017
+        10 | 2012
+        22 | 1904
+        15 | 1857
+        16 | 1846
+        14 | 1811
+        23 | 1778
+        18 | 1678
+         8 | 1517
+        20 | 1512
+        21 | 1512
+        13 | 1481
+         5 | 1426
+         0 | 1405
+         1 | 1403
+        12 | 1396
+        19 | 1367
+         7 | 1227
+         4 | 1036
+         3 | 1028
+         6 |  970
+         2 |  954
+(24 rows)
+```
+
 ### Find the slowest requests
 
 ```
