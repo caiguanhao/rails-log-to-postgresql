@@ -65,3 +65,125 @@ To have logrotate run at 00:00:
 # add this to /etc/crontab and mv /etc/cron.daily/logrotate /etc/cron.daily.really/logrotate
 0  0    * * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily.really )
 ```
+
+## 3. import
+
+Download the log file `production.log`, and create a database `my_test_db`.
+
+And put following code to `import.sh` and make it executable `chmod +x import.sh`
+
+Run `./import.sh` to start.
+
+```bash
+#!/bin/bash
+
+LOGFILE=production.log
+DBNAME=my_test_db
+
+echo '
+DROP TABLE IF EXISTS weblogstemp;
+CREATE TABLE weblogstemp (
+  time timestamp without time zone NOT NULL,
+  subdomain character varying NOT NULL,
+  ip_address inet NOT NULL,
+  json json NOT NULL
+);
+' | psql $DBNAME
+
+awk '
+BEGIN {
+  FS="\\[|\\]| "
+  print "COPY weblogstemp (time, subdomain, ip_address, json) FROM stdin;"
+}
+/{"method"/ {
+  printf("%s", $2"\t"$5"\t"$8"\t");
+  $1=$2=$3=$4=$5=$6=$7=$8=$9="";
+  print substr($0,10);
+}
+END {
+  print "\\."
+}
+' $LOGFILE | psql $DBNAME
+
+echo '
+DROP TYPE IF EXISTS weblogjson;
+CREATE TYPE weblogjson AS (
+  method character varying,
+  path character varying,
+  format character varying,
+  controller character varying,
+  action character varying,
+  status character varying,
+  duration numeric(6,2),
+  view numeric(6,2),
+  db numeric(6,2)
+);
+DROP TABLE IF EXISTS weblogs;
+CREATE TABLE weblogs AS (
+  SELECT w.time, w.subdomain, w.ip_address, j.* FROM
+  weblogstemp w, json_populate_record(null::weblogjson, json) j
+);
+DROP TYPE weblogjson;
+DROP TABLE weblogstemp;
+' | psql $DBNAME
+```
+
+It takes about 15 secs to import 500k lines (requests) on an MBP.
+
+## 4. query
+
+You can now run `psql my_test_db` to query the log.
+
+### Count
+
+```
+# select count(*) from weblogs;
+ count
+--------
+ 553656
+(1 row)
+```
+
+### Count by controller
+
+```
+# select controller, count(*) c from weblogs group by controller order by c desc;
+            controller             |   c
+-----------------------------------+--------
+ PostsController                   | 295102
+ UsersController                   |  77635
+ SessionsController                |  63666
+ HomeController                    |  47266
+ ApplicationController             |  31312
+...
+```
+
+### Count by status
+
+```
+# select status, count(*) c from weblogs group by status order by c desc;
+ status |   c
+--------+--------
+ 200    | 393259
+ 302    | 104891
+ 404    |  46658
+ 400    |   5540
+ 422    |   2960
+ 204    |    305
+ 500    |     39
+ 401    |      4
+(8 rows)
+```
+
+### Count by IP address
+
+```
+# select ip_address, count(*) c from weblogs group by ip_address order by c desc;
+   ip_address    |   c
+-----------------+-------
+ 23.106.203.90   | 17734
+ 104.151.73.2    |  8476
+ 198.16.59.178   |  7824
+ 142.234.255.76  |  7016
+...
+```
