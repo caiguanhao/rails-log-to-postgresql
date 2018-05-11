@@ -187,3 +187,17 @@ You can now run `psql my_test_db` to query the log.
  142.234.255.76  |  7016
 ...
 ```
+
+### Find the slowest requests
+
+```
+# select regexp_replace(path, '\?.*', '') path, max(duration) duration from weblogs group by 1 order by 2 desc limit 5;
+   path   | duration
+----------+----------
+ /ydvgd   |  4464.97
+ /geetest |  4095.70
+ /        |  2867.22
+ /forums  |  2695.80
+ /search  |  2601.04
+(5 rows)
+```
