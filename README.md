@@ -241,3 +241,25 @@ You can now run `psql my_test_db` to query the log.
  /search  |  2601.04
 (5 rows)
 ```
+
+### Find popular search keywords
+
+First, you need to create a function called [url_decode](https://postgres.cz/wiki/PostgreSQL_SQL_Tricks#Function_for_decoding_of_url_code).
+
+To rank search keywords by number of requests:
+
+```
+# select * from (
+  select url_decode ((regexp_match(path, 'query=([^&]*)'))[1]) query, count(*) count
+  from weblogs where controller = 'SearchController' group by 1 order by 2 desc
+) a where query != '' AND count > 5;
+```
+
+By number of unique IP address:
+
+```
+# select * from (
+  select url_decode ((regexp_match(path, 'query=([^&]*)'))[1]) query, count(distinct ip_address) count
+  from weblogs where controller = 'SearchController' group by 1 order by 2 desc
+) a where query != '' AND count > 10;
+```
