@@ -98,6 +98,7 @@ BEGIN {
 /{"method"/ {
   printf("%s", $2"\t"$5"\t"$8"\t");
   $1=$2=$3=$4=$5=$6=$7=$8=$9="";
+  gsub("\\\\","\\\\");
   print substr($0,10);
 }
 END {
@@ -114,9 +115,9 @@ CREATE TYPE weblogjson AS (
   controller character varying,
   action character varying,
   status character varying,
-  duration numeric(6,2),
-  view numeric(6,2),
-  db numeric(6,2)
+  duration numeric(8,2),
+  view numeric(8,2),
+  db numeric(8,2)
 );
 DROP TABLE IF EXISTS weblogs;
 CREATE TABLE weblogs AS (
