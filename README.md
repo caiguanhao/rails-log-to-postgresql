@@ -36,9 +36,9 @@ Then, your log looks like:
 I 2018-05-10T00:00:13 #23700 [www] [23.106.203.90] {"method":"GET","path":"/","format":"html","controller":"HomeController","action":"index","status":200,"duration":21.29,"view":19.21,"db":0.0}
 ```
 
-## 2. lograte
+## 2. logrotate
 
-It's better to use lograte to split the log file by date. Example:
+It's better to use logrotate to split the log file by date. Example:
 
 ```
 /my-rails-project/current/log/production.log {
